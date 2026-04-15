@@ -50,12 +50,12 @@ async function handleNotification(req, res) {
         await subscriptionRepository.save(subscription);
 
         let member = await memberRepository.findOneBy({
-          userId: subscription.userId,
+          userId: payment.userId,
           subscriptionId: subscription.id,
         });
         if (!member) {
           member = memberRepository.create({
-            userId: subscription.userId,
+            userId: payment.userId,
             subscriptionId: subscription.id,
             status: "active",
             startedAt: subscription.startedAt,

@@ -335,6 +335,160 @@
         }
       }
     },
+    "/api/members": {
+      "get": {
+        "summary": "Get all members",
+        "description": "Mengambil daftar member.",
+        "security": [
+          { "bearerAuth": [] }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of members",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Member" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create member",
+        "description": "Membuat member baru untuk subscription yang sudah ada.",
+        "security": [
+          { "bearerAuth": [] }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemberCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Member created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Member" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/api/members/{id}": {
+      "get": {
+        "summary": "Get member by ID",
+        "description": "Mengambil member berdasarkan ID.",
+        "security": [
+          { "bearerAuth": [] }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "example": 1 },
+            "description": "ID member"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Member found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Member" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "put": {
+        "summary": "Update member",
+        "description": "Memperbarui data member.",
+        "security": [
+          { "bearerAuth": [] }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "example": 1 },
+            "description": "ID member"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemberUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Member updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Member" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "delete": {
+        "summary": "Delete member",
+        "description": "Menghapus member berdasarkan ID.",
+        "security": [
+          { "bearerAuth": [] }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "example": 1 },
+            "description": "ID member"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Member deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
     "/api/users/login": {
       "post": {
         "summary": "Login user",
@@ -884,6 +1038,55 @@
             "type": "string",
             "example": "midtrans"
           }
+        }
+      },
+      "Member": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "userId": { "type": "integer", "example": 1 },
+          "subscriptionId": { "type": "integer", "example": 1 },
+          "status": { "type": "string", "example": "active" },
+          "startedAt": { "type": "string", "format": "date-time", "nullable": true, "example": "2026-05-01T00:00:00.000Z" },
+          "expiredAt": { "type": "string", "format": "date-time", "nullable": true, "example": "2026-06-01T00:00:00.000Z" },
+          "createdAt": { "type": "string", "format": "date-time", "example": "2026-04-15T08:00:00.000Z" },
+          "updatedAt": { "type": "string", "format": "date-time", "example": "2026-04-15T08:00:00.000Z" }
+        }
+      },
+      "MemberCreateRequest": {
+        "type": "object",
+        "required": ["subscriptionId"],
+        "properties": {
+          "subscriptionId": {
+            "type": "integer",
+            "example": 1
+          },
+          "status": {
+            "type": "string",
+            "example": "active"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "example": "2026-05-01T00:00:00.000Z"
+          },
+          "expiredAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "example": "2026-06-01T00:00:00.000Z"
+          }
+        }
+      },
+      "MemberUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "userId": { "type": "integer", "example": 1 },
+          "subscriptionId": { "type": "integer", "example": 1 },
+          "status": { "type": "string", "example": "active" },
+          "startedAt": { "type": "string", "format": "date-time", "nullable": true, "example": "2026-05-01T00:00:00.000Z" },
+          "expiredAt": { "type": "string", "format": "date-time", "nullable": true, "example": "2026-06-01T00:00:00.000Z" }
         }
       },
       "PaymentCreateResponse": {

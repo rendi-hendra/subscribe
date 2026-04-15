@@ -99,6 +99,41 @@ const paymentCreateSchema = z.object({
   }),
 });
 
+const memberCreateSchema = z.object({
+  body: z.object({
+    subscriptionId: z.preprocess((value) => {
+      if (typeof value === "string" && value.trim() !== "") {
+        return Number(value);
+      }
+      return value;
+    }, z.number().int().positive()),
+    status: z.string().trim().optional(),
+    startedAt: optionalDate,
+    expiredAt: optionalDate,
+  }),
+});
+
+const memberUpdateSchema = z.object({
+  params: idParamSchema.shape.params,
+  body: z.object({
+    userId: z.preprocess((value) => {
+      if (typeof value === "string" && value.trim() !== "") {
+        return Number(value);
+      }
+      return value;
+    }, z.number().int().positive().optional()),
+    subscriptionId: z.preprocess((value) => {
+      if (typeof value === "string" && value.trim() !== "") {
+        return Number(value);
+      }
+      return value;
+    }, z.number().int().positive().optional()),
+    status: z.string().trim().optional(),
+    startedAt: optionalDate,
+    expiredAt: optionalDate,
+  }),
+});
+
 const paymentNotificationSchema = z.object({
   body: z.object({
     order_id: nonEmptyString,
@@ -115,6 +150,8 @@ module.exports = {
   authRefreshSchema,
   subscriptionCreateSchema,
   subscriptionUpdateSchema,
+  memberCreateSchema,
+  memberUpdateSchema,
   paymentCreateSchema,
   paymentNotificationSchema,
 };

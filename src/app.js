@@ -7,6 +7,7 @@ const subscriptionRoutes = require("./routes/subscriptionRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const userRoutes = require("./routes/userRoutes");
 const authRoutes = require("./routes/authRoutes");
+const memberRoutes = require("./routes/memberRoutes");
 const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
@@ -21,6 +22,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/users", authRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/members", memberRoutes);
 
 app.use(errorHandler);
 

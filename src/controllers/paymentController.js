@@ -24,21 +24,29 @@ async function createPayment(req, res) {
 
     const subscription = await subscriptionRepository.findOneBy({
       id: parseInt(subscriptionId, 10),
-      userId,
     });
     if (!subscription) {
       return res.status(404).json({ error: "Subscription tidak ditemukan" });
     }
 
+    const paymentAmount = Number(grossAmount);
+    const subscriptionPrice = Number(subscription.price);
+    if (Number.isNaN(paymentAmount) || paymentAmount !== subscriptionPrice) {
+      return res.status(400).json({
+        error: "grossAmount harus sama dengan harga subscription",
+        expected: subscriptionPrice,
+      });
+    }
+
     const parameter = {
       transaction_details: {
         order_id: orderId,
-        gross_amount: grossAmount,
+        gross_amount: paymentAmount,
       },
       item_details: itemDetails || [
         {
           id: subscriptionId.toString(),
-          price: grossAmount,
+          price: paymentAmount,
           quantity: 1,
           name: subscription.planName || "Subscription Payment",
         },

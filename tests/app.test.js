@@ -5,6 +5,7 @@ const AppDataSource = require("../data-source");
 let userRepository;
 let subscriptionRepository;
 let paymentRepository;
+let memberRepository;
 
 async function clearDatabase() {
   if (!AppDataSource.isInitialized) {
@@ -14,9 +15,11 @@ async function clearDatabase() {
   paymentRepository = AppDataSource.getRepository("Payment");
   subscriptionRepository = AppDataSource.getRepository("Subscription");
   userRepository = AppDataSource.getRepository("User");
+  memberRepository = AppDataSource.getRepository("Member");
 
   await paymentRepository.clear();
   await subscriptionRepository.clear();
+  await memberRepository.clear();
   await userRepository.clear();
 }
 
@@ -28,6 +31,7 @@ describe("Subscribe API", () => {
     userRepository = AppDataSource.getRepository("User");
     subscriptionRepository = AppDataSource.getRepository("Subscription");
     paymentRepository = AppDataSource.getRepository("Payment");
+    memberRepository = AppDataSource.getRepository("Member");
     await clearDatabase();
   });
 
@@ -162,6 +166,181 @@ describe("Subscribe API", () => {
     expect(getResponse.body).toHaveProperty(
       "error",
       "Akses forbidden. Subscription belum aktif atau sudah kadaluarsa",
+    );
+  });
+
+  test("POST /api/members creates a member for an existing subscription and allows update/delete", async () => {
+    const credentials = {
+      name: "Member User",
+      email: "memberuser@example.com",
+      phone: "081234567895",
+      password: "secret123",
+    };
+
+    await request(app)
+      .post("/api/users")
+      .send(credentials)
+      .set("Accept", "application/json");
+
+    const loginResponse = await request(app)
+      .post("/api/users/login")
+      .send({ email: credentials.email, password: credentials.password })
+      .set("Accept", "application/json");
+
+    const token = loginResponse.body.accessToken;
+    expect(token).toBeTruthy();
+
+    const newSubscription = {
+      planName: "Member Plan",
+      price: 75000,
+    };
+
+    const subscriptionResponse = await request(app)
+      .post("/api/subscriptions")
+      .send(newSubscription)
+      .set("Accept", "application/json")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(subscriptionResponse.status).toBe(201);
+    const subscriptionId = subscriptionResponse.body.id;
+
+    const createMemberResponse = await request(app)
+      .post("/api/members")
+      .send({ subscriptionId })
+      .set("Accept", "application/json")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(createMemberResponse.status).toBe(201);
+    expect(createMemberResponse.body).toMatchObject({
+      userId: subscriptionResponse.body.userId,
+      subscriptionId,
+      status: "active",
+    });
+    expect(createMemberResponse.body).toHaveProperty("id");
+
+    const memberId = createMemberResponse.body.id;
+
+    const getMemberResponse = await request(app)
+      .get(`/api/members/${memberId}`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(getMemberResponse.status).toBe(200);
+    expect(getMemberResponse.body).toMatchObject({
+      id: memberId,
+      subscriptionId,
+    });
+
+    const updatedStatus = "expired";
+    const updateResponse = await request(app)
+      .put(`/api/members/${memberId}`)
+      .send({ status: updatedStatus })
+      .set("Accept", "application/json")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(updateResponse.status).toBe(200);
+    expect(updateResponse.body).toHaveProperty("status", updatedStatus);
+
+    const deleteResponse = await request(app)
+      .delete(`/api/members/${memberId}`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(deleteResponse.status).toBe(200);
+    expect(deleteResponse.body).toHaveProperty("success", true);
+
+    const getDeletedResponse = await request(app)
+      .get(`/api/members/${memberId}`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(getDeletedResponse.status).toBe(404);
+  });
+
+  test("User2 can pay User1 subscription and become member after payment notification", async () => {
+    const user1 = {
+      name: "Budi",
+      email: "budi@example.com",
+      phone: "081234567890",
+      password: "secret123",
+    };
+    const user2 = {
+      name: "Rendi",
+      email: "rendi@example.com",
+      phone: "081234567899",
+      password: "secret123",
+    };
+
+    await request(app)
+      .post("/api/users")
+      .send(user1)
+      .set("Accept", "application/json");
+    await request(app)
+      .post("/api/users")
+      .send(user2)
+      .set("Accept", "application/json");
+
+    const login1 = await request(app)
+      .post("/api/users/login")
+      .send({ email: user1.email, password: user1.password })
+      .set("Accept", "application/json");
+    expect(login1.status).toBe(200);
+    const token1 = login1.body.accessToken;
+
+    const subscriptionResponse = await request(app)
+      .post("/api/subscriptions")
+      .send({ planName: "Shared Plan", price: 50000 })
+      .set("Accept", "application/json")
+      .set("Authorization", `Bearer ${token1}`);
+
+    expect(subscriptionResponse.status).toBe(201);
+    const subscriptionId = subscriptionResponse.body.id;
+
+    const user2Entity = await userRepository.findOneBy({ email: user2.email });
+    expect(user2Entity).toBeTruthy();
+
+    const paymentRepositoryLocal = AppDataSource.getRepository("Payment");
+    const payment = paymentRepositoryLocal.create({
+      subscriptionId,
+      userId: user2Entity.id,
+      midtransOrderId: `order-${Date.now()}`,
+      grossAmount: 50000,
+      paymentType: "midtrans",
+      paymentStatus: "pending",
+      paymentUrl: null,
+    });
+    const savedPayment = await paymentRepositoryLocal.save(payment);
+
+    const notifyResponse = await request(app)
+      .post("/api/payments/notification")
+      .send({
+        order_id: savedPayment.midtransOrderId,
+        transaction_status: "settlement",
+        fraud_status: "accept",
+        transaction_id: "tx-123",
+      })
+      .set("Accept", "application/json");
+
+    expect(notifyResponse.status).toBe(200);
+    expect(notifyResponse.body).toHaveProperty("success", true);
+
+    const login2 = await request(app)
+      .post("/api/users/login")
+      .send({ email: user2.email, password: user2.password })
+      .set("Accept", "application/json");
+    expect(login2.status).toBe(200);
+    const token2 = login2.body.accessToken;
+
+    const membersResponse = await request(app)
+      .get("/api/members")
+      .set("Authorization", `Bearer ${token2}`);
+
+    expect(membersResponse.status).toBe(200);
+    expect(Array.isArray(membersResponse.body)).toBe(true);
+    expect(membersResponse.body).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          userId: user2Entity.id,
+          subscriptionId,
+        }),
+      ]),
     );
   });
 });
