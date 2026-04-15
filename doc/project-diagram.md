@@ -5,38 +5,38 @@ This diagram shows the main layers and components of the `subscribe` project.
 
 ```mermaid
 flowchart TD
-  Client[Client / API Consumer]
-  subgraph API[Express API]
-    App[app.js]
-    SwaggerDocs[/api/docs]
-    SwaggerUI[Swagger UI]
-    Health[/health]
-    Users[/api/users]
-    Auth[/api/users/login]
-    Subscriptions[/api/subscriptions]
-    Payments[/api/payments]
-    Members[/api/members]
-    ErrorHandler[errorHandler.js]
-    AuthMiddleware[authMiddleware.js]
-    ValidateMiddleware[validateRequest.js]
+  Client["Client / API Consumer"]
+  subgraph API["Express API"]
+    App["app.js"]
+    SwaggerDocs["/api/docs"]
+    SwaggerUI["Swagger UI"]
+    Health["/health"]
+    Users["/api/users"]
+    Auth["/api/users/login"]
+    Subscriptions["/api/subscriptions"]
+    Payments["/api/payments"]
+    Members["/api/members"]
+    ErrorHandler["errorHandler.js"]
+    AuthMiddleware["authMiddleware.js"]
+    ValidateMiddleware["validateRequest.js"]
   end
 
-  subgraph Controllers[Controllers]
-    UserController[userController.js]
-    AuthController[authController.js]
-    SubscriptionController[subscriptionController.js]
-    PaymentController[paymentController.js]
-    PaymentNotificationController[paymentNotificationController.js]
-    MemberController[memberController.js]
+  subgraph Controllers["Controllers"]
+    UserController["userController.js"]
+    AuthController["authController.js"]
+    SubscriptionController["subscriptionController.js"]
+    PaymentController["paymentController.js"]
+    PaymentNotificationController["paymentNotificationController.js"]
+    MemberController["memberController.js"]
   end
 
-  subgraph Data[Persistence]
-    DataSource[data-source.js]
-    DataSourceLabel[TypeORM DataSource]
-    UserEntity[User entity]
-    SubscriptionEntity[Subscription entity]
-    PaymentEntity[Payment entity]
-    MemberEntity[Member entity]
+  subgraph Data["Persistence"]
+    DataSource["data-source.js"]
+    DataSourceLabel["TypeORM Data Source"]
+    UserEntity["User entity"]
+    SubscriptionEntity["Subscription entity"]
+    PaymentEntity["Payment entity"]
+    MemberEntity["Member entity"]
   end
 
   Client -->|HTTP requests| App
@@ -84,9 +84,9 @@ flowchart TD
   classDef api fill:#f2f6ff,stroke:#1f78b4;
   classDef controller fill:#fef2f0,stroke:#e34a33;
   classDef persistence fill:#f0fff0,stroke:#33a02c;
-  class App,Swagger,Health,Users,Auth,Subscriptions,Payments,Members,ErrorHandler,AuthMiddleware,ValidateMiddleware api;
+  class App,SwaggerDocs,SwaggerUI,Health,Users,Auth,Subscriptions,Payments,Members,ErrorHandler,AuthMiddleware,ValidateMiddleware api;
   class UserController,AuthController,SubscriptionController,PaymentController,PaymentNotificationController,MemberController controller;
-  class DataSource,UserEntity,SubscriptionEntity,PaymentEntity,MemberEntity persistence;
+  class DataSource,DataSourceLabel,UserEntity,SubscriptionEntity,PaymentEntity,MemberEntity persistence;
 ```
 
 ## Key Components
