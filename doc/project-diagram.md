@@ -8,7 +8,8 @@ flowchart TD
   Client[Client / API Consumer]
   subgraph API[Express API]
     App[app.js]
-    Swagger[/api/docs\nSwagger UI]
+    SwaggerDocs[/api/docs]
+    SwaggerUI[Swagger UI]
     Health[/health]
     Users[/api/users]
     Auth[/api/users/login]
@@ -30,7 +31,8 @@ flowchart TD
   end
 
   subgraph Data[Persistence]
-    DataSource[data-source.js\nTypeORM DataSource]
+    DataSource[data-source.js]
+    DataSourceLabel[TypeORM DataSource]
     UserEntity[User entity]
     SubscriptionEntity[Subscription entity]
     PaymentEntity[Payment entity]
@@ -43,7 +45,8 @@ flowchart TD
   App --> Subscriptions
   App --> Payments
   App --> Members
-  App --> Swagger
+  App --> SwaggerDocs
+  App --> SwaggerUI
   App --> Health
   App --> ErrorHandler
 
@@ -76,6 +79,7 @@ flowchart TD
   DataSource --> SubscriptionEntity
   DataSource --> PaymentEntity
   DataSource --> MemberEntity
+  DataSource --> DataSourceLabel
 
   classDef api fill:#f2f6ff,stroke:#1f78b4;
   classDef controller fill:#fef2f0,stroke:#e34a33;
