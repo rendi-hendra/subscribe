@@ -6,6 +6,7 @@ const swaggerDocument = require("../doc/swagger.json");
 const subscriptionRoutes = require("./routes/subscriptionRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const userRoutes = require("./routes/userRoutes");
+const planRoutes = require("./routes/planRoutes");
 const authRoutes = require("./routes/authRoutes");
 const memberRoutes = require("./routes/memberRoutes");
 const errorHandler = require("./middleware/errorHandler");
@@ -20,6 +21,7 @@ app.get("/health", (req, res) => {
 
 app.use("/api/users", userRoutes);
 app.use("/api/users", authRoutes);
+app.use("/api/plans", planRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/members", memberRoutes);

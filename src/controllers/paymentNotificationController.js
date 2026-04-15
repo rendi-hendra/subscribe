@@ -42,11 +42,20 @@ async function handleNotification(req, res) {
         id: payment.subscriptionId,
       });
       if (subscription) {
+        let durationDays = 30; // fallback rating
+        const planRepository = AppDataSource.getRepository("Plan");
+        if (subscription.planId) {
+          const plan = await planRepository.findOneBy({ id: subscription.planId });
+          if (plan) {
+            durationDays = plan.durationDays;
+          }
+        }
+
         subscription.status = "active";
         subscription.startedAt = subscription.startedAt || new Date();
         subscription.expiredAt =
           subscription.expiredAt ||
-          new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+          new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
         await subscriptionRepository.save(subscription);
 
         let member = await memberRepository.findOneBy({

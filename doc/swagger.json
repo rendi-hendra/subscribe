@@ -119,6 +119,143 @@
         }
       }
     },
+    "/api/plans": {
+      "get": {
+        "summary": "Get all plans",
+        "description": "Mengambil daftar plan.",
+        "responses": {
+          "200": {
+            "description": "List of plans",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Plan"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create plan",
+        "description": "Membuat plan baru.",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Plan created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Plan"
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/api/plans/{id}": {
+      "get": {
+        "summary": "Get plan",
+        "description": "Mengambil plan berdasarkan ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "example": 1 },
+            "description": "ID plan"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Plan found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Plan" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "put": {
+        "summary": "Update plan",
+        "description": "Memperbarui plan.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "example": 1 },
+            "description": "ID plan"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PlanUpdateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Plan updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Plan" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "delete": {
+        "summary": "Delete plan",
+        "description": "Menghapus plan.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "example": 1 },
+            "description": "ID plan"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Plan deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "success": { "type": "boolean", "example": true } }
+                }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
     "/api/subscriptions": {
       "get": {
         "summary": "Get all subscriptions",
@@ -833,14 +970,9 @@
             "type": "integer",
             "example": 1
           },
-          "planName": {
-            "type": "string",
-            "example": "Basic Plan"
-          },
-          "price": {
-            "type": "number",
-            "format": "double",
-            "example": 50000
+          "planId": {
+            "type": "integer",
+            "example": 1
           },
           "status": {
             "type": "string",
@@ -872,16 +1004,11 @@
       },
       "SubscriptionCreateRequest": {
         "type": "object",
-        "required": ["planName", "price"],
+        "required": ["planId"],
         "properties": {
-          "planName": {
-            "type": "string",
-            "example": "Basic Plan"
-          },
-          "price": {
-            "type": "number",
-            "format": "double",
-            "example": 50000
+          "planId": {
+            "type": "integer",
+            "example": 1
           },
           "status": {
             "type": "string",
@@ -904,14 +1031,9 @@
       "SubscriptionUpdateRequest": {
         "type": "object",
         "properties": {
-          "planName": {
-            "type": "string",
-            "example": "Basic Plan"
-          },
-          "price": {
-            "type": "number",
-            "format": "double",
-            "example": 75000
+          "planId": {
+            "type": "integer",
+            "example": 1
           },
           "status": {
             "type": "string",
@@ -1140,6 +1262,37 @@
             "type": "string",
             "example": "abcdef1234567890"
           }
+        }
+      },
+      "Plan": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "name": { "type": "string", "example": "Basic Plan" },
+          "price": { "type": "number", "format": "double", "example": 50000 },
+          "durationDays": { "type": "integer", "example": 30 },
+          "description": { "type": "string", "example": "Paket Basic 30 Hari" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "PlanCreateRequest": {
+        "type": "object",
+        "required": ["name", "price", "durationDays"],
+        "properties": {
+          "name": { "type": "string", "example": "Premium Plan" },
+          "price": { "type": "number", "format": "double", "example": 150000 },
+          "durationDays": { "type": "integer", "example": 90 },
+          "description": { "type": "string", "example": "Akses 90 hari" }
+        }
+      },
+      "PlanUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "example": "Premium Plan Updated" },
+          "price": { "type": "number", "format": "double", "example": 200000 },
+          "durationDays": { "type": "integer", "example": 90 },
+          "description": { "type": "string", "example": "Akses 90 hari baru" }
         }
       }
     }

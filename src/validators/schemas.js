@@ -64,8 +64,12 @@ const subscriptionStatusSchema = z.enum([
 
 const subscriptionCreateSchema = z.object({
   body: z.object({
-    planName: nonEmptyString,
-    price: positiveNumber,
+    planId: z.preprocess((value) => {
+      if (typeof value === "string" && value.trim() !== "") {
+        return Number(value);
+      }
+      return value;
+    }, z.number().int().positive()),
     status: subscriptionStatusSchema.optional(),
     startedAt: optionalDate,
     expiredAt: optionalDate,
@@ -75,8 +79,12 @@ const subscriptionCreateSchema = z.object({
 const subscriptionUpdateSchema = z.object({
   params: idParamSchema.shape.params,
   body: z.object({
-    planName: nonEmptyString.optional(),
-    price: positiveNumber.optional(),
+    planId: z.preprocess((value) => {
+      if (typeof value === "string" && value.trim() !== "") {
+        return Number(value);
+      }
+      return value;
+    }, z.number().int().positive().optional()),
     status: subscriptionStatusSchema.optional(),
     startedAt: optionalDate,
     expiredAt: optionalDate,
@@ -143,6 +151,35 @@ const paymentNotificationSchema = z.object({
   }),
 });
 
+const planCreateSchema = z.object({
+  body: z.object({
+    name: nonEmptyString,
+    price: positiveNumber,
+    durationDays: z.preprocess((value) => {
+      if (typeof value === "string" && value.trim() !== "") {
+        return Number(value);
+      }
+      return value;
+    }, z.number().int().positive()),
+    description: z.string().trim().optional(),
+  }),
+});
+
+const planUpdateSchema = z.object({
+  params: idParamSchema.shape.params,
+  body: z.object({
+    name: nonEmptyString.optional(),
+    price: positiveNumber.optional(),
+    durationDays: z.preprocess((value) => {
+      if (typeof value === "string" && value.trim() !== "") {
+        return Number(value);
+      }
+      return value;
+    }, z.number().int().positive().optional()),
+    description: z.string().trim().optional(),
+  }),
+});
+
 module.exports = {
   idParamSchema,
   userCreateSchema,
@@ -154,4 +191,6 @@ module.exports = {
   memberUpdateSchema,
   paymentCreateSchema,
   paymentNotificationSchema,
+  planCreateSchema,
+  planUpdateSchema,
 };

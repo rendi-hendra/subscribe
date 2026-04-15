@@ -1,34 +1,30 @@
 const { EntitySchema } = require("typeorm");
 
 module.exports = new EntitySchema({
-  name: "Subscription",
-  tableName: "subscriptions",
+  name: "Plan",
+  tableName: "plans",
   columns: {
     id: {
       primary: true,
       type: "int",
       generated: true,
     },
-    userId: {
+    name: {
+      type: "varchar",
+      nullable: false,
+    },
+    price: {
+      type: "decimal",
+      precision: 15,
+      scale: 2,
+      nullable: false,
+    },
+    durationDays: {
       type: "int",
       nullable: false,
     },
-    planId: {
-      type: "int",
-      nullable: false,
-    },
-    status: {
-      type: "enum",
-      enum: ["pending", "active", "expired", "cancelled"],
-      nullable: false,
-      default: "pending",
-    },
-    startedAt: {
-      type: "datetime",
-      nullable: true,
-    },
-    expiredAt: {
-      type: "datetime",
+    description: {
+      type: "varchar",
       nullable: true,
     },
     createdAt: {

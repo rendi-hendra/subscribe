@@ -140,8 +140,7 @@ describe("Subscribe API", () => {
     expect(token).toBeTruthy();
 
     const newSubscription = {
-      planName: "Basic Plan",
-      price: 50000,
+      planId: 1,
     };
 
     const createResponse = await request(app)
@@ -152,7 +151,7 @@ describe("Subscribe API", () => {
 
     expect(createResponse.status).toBe(201);
     expect(createResponse.body).toMatchObject({
-      planName: newSubscription.planName,
+      planId: newSubscription.planId,
       status: "pending",
     });
     expect(createResponse.body).toHaveProperty("id");
@@ -191,8 +190,7 @@ describe("Subscribe API", () => {
     expect(token).toBeTruthy();
 
     const newSubscription = {
-      planName: "Member Plan",
-      price: 75000,
+      planId: 1,
     };
 
     const subscriptionResponse = await request(app)
@@ -286,7 +284,7 @@ describe("Subscribe API", () => {
 
     const subscriptionResponse = await request(app)
       .post("/api/subscriptions")
-      .send({ planName: "Shared Plan", price: 50000 })
+      .send({ planId: 1 })
       .set("Accept", "application/json")
       .set("Authorization", `Bearer ${token1}`);
 

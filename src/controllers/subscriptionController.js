@@ -38,12 +38,12 @@ const ALLOWED_SUBSCRIPTION_STATUSES = [
 
 async function createSubscription(req, res) {
   try {
-    const { planName, price, status, startedAt, expiredAt } = req.body;
+    const { planId, status, startedAt, expiredAt } = req.body;
     const userId = req.user?.id;
-    if (!userId || !planName || !price) {
+    if (!userId || !planId) {
       return res
         .status(400)
-        .json({ error: "userId, planName, dan price wajib diisi" });
+        .json({ error: "userId dan planId wajib diisi" });
     }
 
     if (
@@ -56,13 +56,18 @@ async function createSubscription(req, res) {
       });
     }
 
+    const planRepository = AppDataSource.getRepository("Plan");
+    const plan = await planRepository.findOneBy({ id: parseInt(planId, 10) });
+    if (!plan) {
+      return res.status(404).json({ error: "Plan tidak ditemukan" });
+    }
+
     const subscriptionRepository = AppDataSource.getRepository("Subscription");
     const subscription = subscriptionRepository.create({
       userId,
-      planName,
-      price,
+      planId,
       status: status || "pending",
-      startedAt: startedAt || null,
+      startedAt: startedAt || new Date(),
       expiredAt: expiredAt || null,
     });
     const result = await subscriptionRepository.save(subscription);
@@ -85,7 +90,7 @@ async function updateSubscription(req, res) {
       return res.status(404).json({ error: "Subscription tidak ditemukan" });
     }
 
-    const { planName, price, status, startedAt, expiredAt } = req.body;
+    const { planId, status, startedAt, expiredAt } = req.body;
 
     if (
       status !== undefined &&
@@ -97,9 +102,15 @@ async function updateSubscription(req, res) {
       });
     }
 
-    subscription.planName =
-      planName !== undefined ? planName : subscription.planName;
-    subscription.price = price !== undefined ? price : subscription.price;
+    if (planId !== undefined && planId !== subscription.planId) {
+      const planRepository = AppDataSource.getRepository("Plan");
+      const plan = await planRepository.findOneBy({ id: parseInt(planId, 10) });
+      if (!plan) {
+        return res.status(404).json({ error: "Plan tidak ditemukan" });
+      }
+      subscription.planId = planId;
+    }
+
     subscription.status = status !== undefined ? status : subscription.status;
     subscription.startedAt =
       startedAt !== undefined ? startedAt : subscription.startedAt;
