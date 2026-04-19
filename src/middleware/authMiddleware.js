@@ -19,7 +19,9 @@ async function authMiddleware(req, res, next) {
       return res.status(401).json({ error: "User tidak valid" });
     }
 
-    req.user = { id: user.id, email: user.email };
+    req.user = { id: user.id, email: user.email, role: user.role };
+    const { defineAbilitiesFor } = require("../config/ability");
+    req.ability = defineAbilitiesFor(req.user);
     next();
   } catch (error) {
     res

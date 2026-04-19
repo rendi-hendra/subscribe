@@ -1,9 +1,14 @@
+const { subject } = require("@casl/ability");
 const AppDataSource = require("../../data-source");
 
 async function getSubscriptions(req, res) {
   try {
     const subscriptionRepository = AppDataSource.getRepository("Subscription");
-    const subscriptions = await subscriptionRepository.find();
+    const where = {};
+    if (req.ability.cannot("manage", "all")) {
+      where.userId = req.user.id;
+    }
+    const subscriptions = await subscriptionRepository.find({ where });
     res.json(subscriptions);
   } catch (error) {
     res
@@ -21,6 +26,13 @@ async function getSubscriptionById(req, res) {
     if (!subscription) {
       return res.status(404).json({ error: "Subscription tidak ditemukan" });
     }
+
+    if (req.ability.cannot("read", subject("Subscription", subscription))) {
+      return res.status(403).json({
+        error: "Akses ditolak. Anda tidak berhak melihat subscription ini.",
+      });
+    }
+
     res.json(subscription);
   } catch (error) {
     res
@@ -38,12 +50,14 @@ const ALLOWED_SUBSCRIPTION_STATUSES = [
 
 async function createSubscription(req, res) {
   try {
+    if (req.ability.cannot("create", "Subscription")) {
+      return res.status(403).json({ error: "Akses ditolak." });
+    }
+
     const { planId, status, startedAt, expiredAt } = req.body;
     const userId = req.user?.id;
     if (!userId || !planId) {
-      return res
-        .status(400)
-        .json({ error: "userId dan planId wajib diisi" });
+      return res.status(400).json({ error: "userId dan planId wajib diisi" });
     }
 
     if (
@@ -90,6 +104,12 @@ async function updateSubscription(req, res) {
       return res.status(404).json({ error: "Subscription tidak ditemukan" });
     }
 
+    if (req.ability.cannot("update", subject("Subscription", subscription))) {
+      return res.status(403).json({
+        error: "Akses ditolak. Anda tidak berhak mengubah subscription ini.",
+      });
+    }
+
     const { planId, status, startedAt, expiredAt } = req.body;
 
     if (
@@ -126,9 +146,35 @@ async function updateSubscription(req, res) {
   }
 }
 
+async function deleteSubscription(req, res) {
+  try {
+    const subscriptionRepository = AppDataSource.getRepository("Subscription");
+    const subscription = await subscriptionRepository.findOneBy({
+      id: parseInt(req.params.id, 10),
+    });
+    if (!subscription) {
+      return res.status(404).json({ error: "Subscription tidak ditemukan" });
+    }
+
+    if (req.ability.cannot("delete", subject("Subscription", subscription))) {
+      return res.status(403).json({
+        error: "Akses ditolak. Anda tidak berhak menghapus subscription ini.",
+      });
+    }
+
+    await subscriptionRepository.softRemove(subscription);
+    res.json({ success: true, message: "Subscription berhasil di-soft delete" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: "Gagal menghapus subscription", details: error.message });
+  }
+}
+
 module.exports = {
   getSubscriptions,
   getSubscriptionById,
   createSubscription,
   updateSubscription,
+  deleteSubscription,
 };

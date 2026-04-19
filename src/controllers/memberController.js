@@ -117,8 +117,8 @@ async function deleteMember(req, res) {
       return res.status(404).json({ error: "Member tidak ditemukan" });
     }
 
-    await memberRepository.remove(member);
-    res.json({ success: true });
+    await memberRepository.softRemove(member);
+    res.json({ success: true, message: "Member berhasil di-soft delete" });
   } catch (error) {
     res
       .status(500)

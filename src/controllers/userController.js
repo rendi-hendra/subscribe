@@ -63,8 +63,28 @@ async function createUser(req, res) {
   }
 }
 
+async function deleteUser(req, res) {
+  try {
+    const userRepository = AppDataSource.getRepository("User");
+    const user = await userRepository.findOneBy({
+      id: parseInt(req.params.id, 10),
+    });
+    if (!user) {
+      return res.status(404).json({ error: "User tidak ditemukan" });
+    }
+
+    await userRepository.softRemove(user);
+    res.json({ success: true, message: "User berhasil di-soft delete" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: "Gagal menghapus user", details: error.message });
+  }
+}
+
 module.exports = {
   getUsers,
   getUserById,
   createUser,
+  deleteUser,
 };

@@ -161,11 +161,11 @@ describe("Subscribe API", () => {
       .get(`/api/subscriptions/${subscriptionId}`)
       .set("Authorization", `Bearer ${token}`);
 
-    expect(getResponse.status).toBe(403);
-    expect(getResponse.body).toHaveProperty(
-      "error",
-      "Akses forbidden. Subscription belum aktif atau sudah kadaluarsa",
-    );
+    expect(getResponse.status).toBe(200);
+    expect(getResponse.body).toMatchObject({
+      id: subscriptionId,
+      status: "pending",
+    });
   });
 
   test("POST /api/members creates a member for an existing subscription and allows update/delete", async () => {
@@ -340,5 +340,88 @@ describe("Subscribe API", () => {
         }),
       ]),
     );
+  });
+
+  test("RBAC: Regular user cannot manage Plans, only Admin can", async () => {
+    // 1. Create a regular user
+    const userCredentials = {
+      name: "Regular User",
+      email: "regular@example.com",
+      phone: "0811111111",
+      password: "password123",
+    };
+    await request(app).post("/api/users").send(userCredentials);
+    const loginRes = await request(app).post("/api/users/login").send({
+      email: userCredentials.email,
+      password: userCredentials.password,
+    });
+    const userToken = loginRes.body.accessToken;
+
+    // 2. Try to create a plan as regular user -> 403
+    const planRes = await request(app)
+      .post("/api/plans")
+      .set("Authorization", `Bearer ${userToken}`)
+      .send({ name: "Hacker Plan", price: 50000, durationDays: 999 });
+    expect(planRes.status).toBe(403);
+    expect(planRes.body.error).toContain("Hanya Admin yang boleh mengelola Plan");
+
+    // 3. Create an admin user (register then update role)
+    const adminCredentials = {
+      name: "Admin User",
+      email: "admin@example.com",
+      phone: "0899999999",
+      password: "adminpassword",
+    };
+    await request(app).post("/api/users").send(adminCredentials);
+    await userRepository.update({ email: adminCredentials.email }, { role: "admin" });
+
+    const adminLoginRes = await request(app).post("/api/users/login").send({
+      email: adminCredentials.email,
+      password: adminCredentials.password,
+    });
+    const adminToken = adminLoginRes.body.accessToken;
+
+    // 4. Create a plan as admin -> 201
+    const adminPlanRes = await request(app)
+      .post("/api/plans")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ name: "Admin Exclusive", price: 1000, durationDays: 30 });
+    expect(adminPlanRes.status).toBe(201);
+    expect(adminPlanRes.body.name).toBe("Admin Exclusive");
+  });
+
+  test("CASL: User can only see their own subscriptions", async () => {
+    // Setup User A
+    const userA = { name: "User A", email: "usera@example.com", password: "password" };
+    await request(app).post("/api/users").send(userA);
+    const loginA = await request(app).post("/api/users/login").send({ email: userA.email, password: userA.password });
+    const tokenA = loginA.body.accessToken;
+
+    // Setup User B
+    const userB = { name: "User B", email: "userb@example.com", password: "password" };
+    await request(app).post("/api/users").send(userB);
+    const loginB = await request(app).post("/api/users/login").send({ email: userB.email, password: userB.password });
+    const tokenB = loginB.body.accessToken;
+
+    // User A creates a subscription (use plan from migration, e.g., ID 1)
+    const subARes = await request(app)
+      .post("/api/subscriptions")
+      .set("Authorization", `Bearer ${tokenA}`)
+      .send({ planId: 1 });
+    const subAId = subARes.body.id;
+
+    // User B tries to access User A's subscription -> 403
+    const forbiddenRes = await request(app)
+      .get(`/api/subscriptions/${subAId}`)
+      .set("Authorization", `Bearer ${tokenB}`);
+    expect(forbiddenRes.status).toBe(403);
+    expect(forbiddenRes.body.error).toContain("Anda tidak berhak melihat subscription ini");
+
+    // User A accesses their own -> 200
+    const successRes = await request(app)
+      .get(`/api/subscriptions/${subAId}`)
+      .set("Authorization", `Bearer ${tokenA}`);
+    expect(successRes.status).toBe(200);
+    expect(successRes.body.id).toBe(subAId);
   });
 });

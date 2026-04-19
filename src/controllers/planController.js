@@ -31,9 +31,16 @@ async function getPlanById(req, res) {
 
 async function createPlan(req, res) {
   try {
+    if (req.ability.cannot("manage", "Plan")) {
+      return res
+        .status(403)
+        .json({ error: "Akses ditolak. Hanya Admin yang boleh mengelola Plan." });
+    }
     const { name, price, durationDays, description } = req.body;
     if (!name || price === undefined || durationDays === undefined) {
-      return res.status(400).json({ error: "name, price, dan durationDays wajib diisi" });
+      return res
+        .status(400)
+        .json({ error: "name, price, dan durationDays wajib diisi" });
     }
 
     const planRepository = AppDataSource.getRepository("Plan");
@@ -55,6 +62,11 @@ async function createPlan(req, res) {
 
 async function updatePlan(req, res) {
   try {
+    if (req.ability.cannot("manage", "Plan")) {
+      return res
+        .status(403)
+        .json({ error: "Akses ditolak. Hanya Admin yang boleh mengelola Plan." });
+    }
     const planRepository = AppDataSource.getRepository("Plan");
     const plan = await planRepository.findOneBy({
       id: parseInt(req.params.id, 10),
@@ -67,8 +79,10 @@ async function updatePlan(req, res) {
 
     plan.name = name !== undefined ? name : plan.name;
     plan.price = price !== undefined ? price : plan.price;
-    plan.durationDays = durationDays !== undefined ? durationDays : plan.durationDays;
-    plan.description = description !== undefined ? description : plan.description;
+    plan.durationDays =
+      durationDays !== undefined ? durationDays : plan.durationDays;
+    plan.description =
+      description !== undefined ? description : plan.description;
 
     const result = await planRepository.save(plan);
     res.json(result);
@@ -81,6 +95,11 @@ async function updatePlan(req, res) {
 
 async function deletePlan(req, res) {
   try {
+    if (req.ability.cannot("manage", "Plan")) {
+      return res
+        .status(403)
+        .json({ error: "Akses ditolak. Hanya Admin yang boleh mengelola Plan." });
+    }
     const planRepository = AppDataSource.getRepository("Plan");
     const plan = await planRepository.findOneBy({
       id: parseInt(req.params.id, 10),
@@ -89,8 +108,8 @@ async function deletePlan(req, res) {
       return res.status(404).json({ error: "Plan tidak ditemukan" });
     }
 
-    await planRepository.remove(plan);
-    res.json({ success: true });
+    await planRepository.softRemove(plan);
+    res.json({ success: true, message: "Plan berhasil di-soft delete" });
   } catch (error) {
     res
       .status(500)

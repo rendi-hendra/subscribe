@@ -133,7 +133,7 @@ async function logout(req, res) {
     }
 
     const seasonRepository = AppDataSource.getRepository("Season");
-    await seasonRepository.delete({ refreshToken });
+    await seasonRepository.softDelete({ refreshToken });
 
     res.json({ success: true });
   } catch (error) {

@@ -15,12 +15,11 @@ const {
   updateSubscription,
 } = require("../controllers/subscriptionController");
 
-router.get("/", authMiddleware, subscriptionMiddleware, getSubscriptions);
+router.get("/", authMiddleware, getSubscriptions);
 router.get(
   "/:id",
   authMiddleware,
   validate(idParamSchema),
-  subscriptionMiddleware,
   getSubscriptionById,
 );
 router.post(
@@ -33,7 +32,6 @@ router.put(
   "/:id",
   authMiddleware,
   validate(subscriptionUpdateSchema),
-  subscriptionMiddleware,
   updateSubscription,
 );
 

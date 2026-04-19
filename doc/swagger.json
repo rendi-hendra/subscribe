@@ -841,6 +841,10 @@
             "type": "string",
             "example": "081234567890"
           },
+          "role": {
+            "type": "string",
+            "example": "user"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time",

@@ -11,11 +11,16 @@
     "migration:show": "npx typeorm migration:show --dataSource ./data-source.js",
     "test": "jest --runInBand"
   },
-  "keywords": ["express", "typeorm", "midtrans"],
+  "keywords": [
+    "express",
+    "typeorm",
+    "midtrans"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@casl/ability": "^6.8.0",
     "bcrypt": "^5.1.0",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",

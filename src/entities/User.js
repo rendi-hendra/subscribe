@@ -26,6 +26,11 @@ module.exports = new EntitySchema({
       type: "varchar",
       nullable: true,
     },
+    role: {
+      type: "varchar",
+      nullable: false,
+      default: "user",
+    },
     createdAt: {
       type: "datetime",
       createDate: true,
@@ -33,6 +38,11 @@ module.exports = new EntitySchema({
     updatedAt: {
       type: "datetime",
       updateDate: true,
+    },
+    deletedAt: {
+      type: "datetime",
+      deleteDate: true,
+      nullable: true,
     },
   },
 });

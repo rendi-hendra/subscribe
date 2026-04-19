@@ -9,6 +9,7 @@ const userRoutes = require("./routes/userRoutes");
 const planRoutes = require("./routes/planRoutes");
 const authRoutes = require("./routes/authRoutes");
 const memberRoutes = require("./routes/memberRoutes");
+const abilityMiddleware = require("./middleware/abilityMiddleware");
 const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
